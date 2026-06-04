@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/xjl/program/**)",
+      "Bash(npm create *)",
+      "Bash(where npm *)",
+      "Bash(cmd.exe //c \"where npm\")",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Program Files \\(x86\\)/**)",
+      "Read(//c/Users//**)",
+      "Bash(export PATH=\"F:/Softwares/ClaudeCode/nodejs/node-v20.11.0-win-x64:$PATH\")",
+      "Bash(npm --version)",
+      "Bash(\"F:/Softwares/ClaudeCode/nodejs/node-v20.11.0-win-x64/node.exe\" --version)",
+      "Bash(\"F:/Softwares/ClaudeCode/nodejs/node-v20.11.0-win-x64/npm.cmd\" --version)",
+      "Bash(cmd.exe *)",
+      "Bash(\"F:/Softwares/ClaudeCode/nodejs/node-v20.11.0-win-x64/node.exe\" \"F:/Softwares/ClaudeCode/nodejs/node-v20.11.0-win-x64/node_modules/@anthropic-ai/claude-code/cli.js\" --version)",
+      "Bash(export NODE_PATH=\"F:/Softwares/ClaudeCode/nodejs/node-v20.11.0-win-x64/node_modules\")",
+      "Bash(\"F:/Softwares/ClaudeCode/nodejs/node-v20.11.0-win-x64/node.exe\" -e \"console.log\\('node works with NODE_PATH:', process.env.NODE_PATH\\)\")",
+      "Bash(\"F:/Softwares/ClaudeCode/nodejs/node-v20.11.0-win-x64/node.exe\" \"F:/Softwares/ClaudeCode/nodejs/node-v20.11.0-win-x64/corepack\" enable)",
+      "Bash(powershell.exe *)",
+      "Bash(tar --version)",
+      "Bash(curl --version)",
+      "Bash(curl -sL -o npm.tgz \"https://registry.npmjs.org/npm/-/npm-10.9.2.tgz\")",
+      "Bash(mkdir -p node_modules/npm)",
+      "Bash(tar -xzf npm.tgz -C node_modules/npm --strip-components=1)",
+      "Bash(F:/Softwares/ClaudeCode/nodejs/node-v20.11.0-win-x64/node.exe *)"
+    ]
+  }
+}
