@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import type { Axis } from '../core/types';
 import { getAllPresets } from '../core/types';
+import { getWorldDelta, type ScreenDir } from '../core/cameraState';
 
 /** 顶部工具栏 */
 export function TopBar() {
@@ -15,6 +16,8 @@ export function TopBar() {
   const toggleGrid = useStore(s => s.toggleGrid);
   const toggleAxes = useStore(s => s.toggleAxes);
   const panelCollapsed = useStore(s => s.panelCollapsed);
+  const overlapEnabled = useStore(s => s.overlapEnabled);
+  const toggleOverlap = useStore(s => s.toggleOverlap);
   const togglePanelCollapsed = useStore(s => s.togglePanelCollapsed);
   const addPresetComponent = useStore(s => s.addPresetComponent);
   const deselectComponent = useStore(s => s.deselectComponent);
@@ -31,8 +34,8 @@ export function TopBar() {
     }
   };
 
-  const handleMoveAll = (dx: number, dy: number, dz: number) => {
-    moveAll([dx, dy, dz]);
+  const handleMoveAll = (dir: ScreenDir) => {
+    moveAll(getWorldDelta(dir));
   };
 
   const handleRotateAll = (axis: Axis) => {
@@ -48,7 +51,7 @@ export function TopBar() {
 
         <span className="top-title">立体拼合</span>
 
-        {/* 网格/坐标轴显隐 */}
+        {/* 网格/坐标轴/重叠模式 */}
         <button
           className={`top-btn top-btn--sm ${showGrid ? 'top-btn--active' : ''}`}
           onPointerDown={(e) => { e.preventDefault(); toggleGrid(); }}
@@ -57,6 +60,11 @@ export function TopBar() {
           className={`top-btn top-btn--sm ${showAxes ? 'top-btn--active' : ''}`}
           onPointerDown={(e) => { e.preventDefault(); toggleAxes(); }}
         >⇱</button>
+        <button
+          className={`top-btn top-btn--sm ${overlapEnabled ? 'top-btn--active' : ''}`}
+          title={overlapEnabled ? '重叠模式：开' : '重叠模式：关'}
+          onPointerDown={(e) => { e.preventDefault(); toggleOverlap(); }}
+        >⊠</button>
 
         {/* 更多菜单 */}
         <button
@@ -111,14 +119,14 @@ export function TopBar() {
 
             <div className="more-menu__divider">整体移动</div>
             <div className="more-menu__row">
-              {[
-                ['←左', -1, 0, 0], ['→右', 1, 0, 0],
-                ['↑上', 0, 1, 0], ['↓下', 0, -1, 0],
-                ['↖前', 0, 0, 1], ['↘后', 0, 0, -1],
-              ].map(([label, dx, dy, dz]) => (
-                <button key={label as string}
+              {([
+                ['←左', 'left'], ['→右', 'right'],
+                ['↑上', 'up'], ['↓下', 'down'],
+                ['↖前', 'forward'], ['↘后', 'back'],
+              ] as [string, ScreenDir][]).map(([label, dir]) => (
+                <button key={label}
                   className="more-menu__btn"
-                  onPointerDown={(e) => { e.preventDefault(); handleMoveAll(dx as number, dy as number, dz as number); }}
+                  onPointerDown={(e) => { e.preventDefault(); handleMoveAll(dir); }}
                 >{label}</button>
               ))}
             </div>

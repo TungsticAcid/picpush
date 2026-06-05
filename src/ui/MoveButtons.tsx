@@ -1,23 +1,23 @@
 import { useStore } from '../store/useStore';
+import { getWorldDelta, type ScreenDir } from '../core/cameraState';
 
-type DirKey = [string, [number, number, number]];
-
-const DIRECTIONS: DirKey[] = [
-  ['← 左', [-1, 0, 0]],
-  ['→ 右', [1, 0, 0]],
-  ['↑ 上', [0, 1, 0]],
-  ['↓ 下', [0, -1, 0]],
-  ['↖ 前', [0, 0, 1]],
-  ['↘ 后', [0, 0, -1]],
+const DIRECTION_LABELS: [string, ScreenDir][] = [
+  ['← 左', 'left'],
+  ['→ 右', 'right'],
+  ['↑ 上', 'up'],
+  ['↓ 下', 'down'],
+  ['↖ 前', 'forward'],
+  ['↘ 后', 'back'],
 ];
 
-/** 方向移动按钮组 — 每个按钮移动 1 格 */
+/** 方向移动按钮组 — 每个按钮沿屏幕相对方向移动 1 格 */
 export function MoveButtons() {
   const selectedId = useStore(s => s.selectedId);
   const moveComponent = useStore(s => s.moveComponent);
 
-  const handleMove = (delta: [number, number, number]) => {
+  const handleMove = (screenDir: ScreenDir) => {
     if (!selectedId) return;
+    const delta = getWorldDelta(screenDir);
     moveComponent(selectedId, delta);
   };
 
@@ -25,13 +25,13 @@ export function MoveButtons() {
     <div className="btn-group">
       <span className="btn-group__label">移动</span>
       <div className="btn-group__grid">
-        {DIRECTIONS.map(([label, delta]) => (
+        {DIRECTION_LABELS.map(([label, dir]) => (
           <button
             key={label}
             className="ctrl-btn"
             onPointerDown={(e) => {
               e.preventDefault();
-              handleMove(delta);
+              handleMove(dir);
             }}
           >
             {label}

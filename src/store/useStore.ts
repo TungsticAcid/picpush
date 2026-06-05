@@ -29,6 +29,8 @@ interface Store {
   showGrid: boolean;
   showAxes: boolean;
   panelCollapsed: boolean;
+  isDragging: boolean;  // 组件正在被拖拽中，此时禁用 OrbitControls
+  overlapEnabled: boolean;  // 允许组件方块重叠（跳过碰撞检测）
 
   // --- 组件操作 ---
   addComponent: (name: string, cubes: [number, number, number][]) => void;
@@ -62,6 +64,8 @@ interface Store {
   toggleAxes: () => void;
   togglePanelCollapsed: () => void;
   clearCollisionFlash: () => void;
+  setDragging: (v: boolean) => void;
+  toggleOverlap: () => void;
 
   // --- 内部 ---
   _rebuildRegistry: () => void;
@@ -117,6 +121,8 @@ export const useStore = create<Store>((set, get) => ({
   showGrid: true,
   showAxes: true,
   panelCollapsed: false,
+  isDragging: false,
+  overlapEnabled: false,
 
   // --- 组件操作 ---
   addComponent: (name, cubes) => {
@@ -192,7 +198,7 @@ export const useStore = create<Store>((set, get) => ({
 
   // --- 变换操作 ---
   moveComponent: (id, delta) => {
-    const { components, snapEnabled } = get();
+    const { components, snapEnabled, overlapEnabled } = get();
     const comp = components.find(c => c.id === id);
     if (!comp) return { collides: false, conflicts: [] };
 
@@ -205,26 +211,28 @@ export const useStore = create<Store>((set, get) => ({
       newPos = snapPosition(newPos);
     }
 
-    const worldPositions = getWorldPositions(comp.cubes, newPos, comp.rotation);
-    const result = registry.checkCollision(id, worldPositions);
-
-    if (!result.collides) {
-      set(s => ({
-        components: s.components.map(c =>
-          c.id === id ? { ...c, position: newPos } : c,
-        ),
-      }));
-      get()._rebuildRegistry();
-    } else {
-      set({ collisionFlashId: id });
-      setTimeout(() => set({ collisionFlashId: null }), 300);
+    // 重叠模式跳过碰撞检测
+    if (!overlapEnabled) {
+      const worldPositions = getWorldPositions(comp.cubes, newPos, comp.rotation);
+      const result = registry.checkCollision(id, worldPositions);
+      if (result.collides) {
+        set({ collisionFlashId: id });
+        setTimeout(() => set({ collisionFlashId: null }), 300);
+        return result;
+      }
     }
 
-    return result;
+    set(s => ({
+      components: s.components.map(c =>
+        c.id === id ? { ...c, position: newPos } : c,
+      ),
+    }));
+    get()._rebuildRegistry();
+    return { collides: false, conflicts: [] };
   },
 
   rotateComponent: (id, axis) => {
-    const { components, alignAxisEnabled } = get();
+    const { components, alignAxisEnabled, overlapEnabled } = get();
     const comp = components.find(c => c.id === id);
     if (!comp) return { collides: false, conflicts: [] };
 
@@ -233,42 +241,45 @@ export const useStore = create<Store>((set, get) => ({
       newQuat = snapQuatToAxis(newQuat);
     }
 
-    const worldPositions = getWorldPositions(comp.cubes, comp.position, newQuat);
-    const result = registry.checkCollision(id, worldPositions);
-
-    if (!result.collides) {
-      set(s => ({
-        components: s.components.map(c =>
-          c.id === id ? { ...c, rotation: newQuat } : c,
-        ),
-      }));
-      get()._rebuildRegistry();
-    } else {
-      set({ collisionFlashId: id });
-      setTimeout(() => set({ collisionFlashId: null }), 300);
+    // 重叠模式跳过碰撞检测
+    if (!overlapEnabled) {
+      const worldPositions = getWorldPositions(comp.cubes, comp.position, newQuat);
+      const result = registry.checkCollision(id, worldPositions);
+      if (result.collides) {
+        set({ collisionFlashId: id });
+        setTimeout(() => set({ collisionFlashId: null }), 300);
+        return result;
+      }
     }
 
-    return result;
+    set(s => ({
+      components: s.components.map(c =>
+        c.id === id ? { ...c, rotation: newQuat } : c,
+      ),
+    }));
+    get()._rebuildRegistry();
+    return { collides: false, conflicts: [] };
   },
 
   dragComponent: (id, newPos) => {
-    const { components } = get();
+    const { components, overlapEnabled } = get();
     const comp = components.find(c => c.id === id);
     if (!comp) return { collides: false, conflicts: [] };
 
-    const worldPositions = getWorldPositions(comp.cubes, newPos, comp.rotation);
-    const result = registry.checkCollision(id, worldPositions);
-
-    if (!result.collides) {
-      set(s => ({
-        components: s.components.map(c =>
-          c.id === id ? { ...c, position: newPos } : c,
-        ),
-      }));
-      // 拖拽中不重建注册表，只在 finalize 时重建
+    // 重叠模式跳过碰撞检测
+    if (!overlapEnabled) {
+      const worldPositions = getWorldPositions(comp.cubes, newPos, comp.rotation);
+      const result = registry.checkCollision(id, worldPositions);
+      if (result.collides) return result;
     }
 
-    return result;
+    set(s => ({
+      components: s.components.map(c =>
+        c.id === id ? { ...c, position: newPos } : c,
+      ),
+    }));
+    // 拖拽中不重建注册表，只在 finalize 时重建
+    return { collides: false, conflicts: [] };
   },
 
   finalizeDrag: (id) => {
@@ -330,6 +341,8 @@ export const useStore = create<Store>((set, get) => ({
   toggleAxes: () => set(s => ({ showAxes: !s.showAxes })),
   togglePanelCollapsed: () => set(s => ({ panelCollapsed: !s.panelCollapsed })),
   clearCollisionFlash: () => set({ collisionFlashId: null }),
+  setDragging: (v) => set({ isDragging: v }),
+  toggleOverlap: () => set(s => ({ overlapEnabled: !s.overlapEnabled })),
 
   // --- 内部 ---
   _rebuildRegistry: () => {

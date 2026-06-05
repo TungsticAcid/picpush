@@ -162,7 +162,7 @@ export function ShapeEditor() {
     <div className="drawer-backdrop" onPointerDown={toggleShapeEditor}>
       <div className="drawer editor-drawer" onPointerDown={(e) => e.stopPropagation()}>
         <div className="drawer__header">
-          <span>形状编辑器</span>
+          <span>形状编辑器 {comp ? `— 编辑「${comp.name}」` : '— 新建组件'}</span>
           <button className="drawer__close" onPointerDown={toggleShapeEditor}>✕</button>
         </div>
 

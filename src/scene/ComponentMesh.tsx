@@ -16,17 +16,28 @@ export function ComponentMesh({ component }: { component: ComponentData }) {
   const isSelected = selectedId === component.id;
   const isFlashing = collisionFlashId === component.id;
 
-  const { onPointerDown: onDragDown, onPointerMove: onDragMove, onPointerUp: onDragUp } =
-    useDragComponent(component.id);
+  const { onPointerDown: onDragDown } = useDragComponent(component.id);
 
   // 方块几何体（复用）
   const geo = useMemo(() => new THREE.BoxGeometry(0.9, 0.9, 0.9), []);
   // 边缘几何体
   const edgeGeo = useMemo(() => new THREE.EdgesGeometry(geo), [geo]);
 
-  /** 点击组件 → 选中，区分点击和拖拽 */
+  /** 点击未选中组件 → 选中（区分点击和拖拽）。
+   *  若射线同时命中已选中的组件（遮挡场景），则不响应本次点击，
+   *  让已选中组件优先处理。 */
   const handlePointerDown = useCallback((e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
+
+    // 遮挡优先：若指针也击中了已选中的组件，忽略本次点击
+    const sid = useStore.getState().selectedId;
+    if (sid && sid !== component.id) {
+      const hitSelected = (e as any).intersections?.some(
+        (i: any) => i.object?.userData?.componentId === sid,
+      );
+      if (hitSelected) return;
+    }
+
     const startX = (e.nativeEvent as PointerEvent).clientX;
     const startY = (e.nativeEvent as PointerEvent).clientY;
 
@@ -35,25 +46,16 @@ export function ComponentMesh({ component }: { component: ComponentData }) {
       const dx = ev.clientX - startX;
       const dy = ev.clientY - startY;
       if (Math.sqrt(dx * dx + dy * dy) < TAP_THRESHOLD_PX) {
-        // 是点击：选中组件
         selectComponent(component.id);
       }
     };
     document.addEventListener('pointerup', onUp, { once: true });
   }, [component.id, selectComponent]);
 
-  /** 拖拽阶段的事件处理 */
+  /** 拖拽启动 — 选中组件被按下时开始拖拽（DOM 级事件跟踪后续 move/up） */
   const handleDragDown = useCallback((e: ThreeEvent<PointerEvent>) => {
     onDragDown(e);
   }, [onDragDown]);
-
-  const handleDragMove = useCallback((e: ThreeEvent<PointerEvent>) => {
-    onDragMove(e);
-  }, [onDragMove]);
-
-  const handleDragUp = useCallback((e: ThreeEvent<PointerEvent>) => {
-    onDragUp(e);
-  }, [onDragUp]);
 
   return (
     <group
@@ -69,8 +71,7 @@ export function ComponentMesh({ component }: { component: ComponentData }) {
             <mesh
               geometry={geo}
               onPointerDown={isDragTarget ? handleDragDown : handlePointerDown}
-              onPointerMove={isDragTarget ? handleDragMove : undefined}
-              onPointerUp={isDragTarget ? handleDragUp : undefined}
+              userData={{ componentId: component.id }}
             >
               <meshPhongMaterial
                 color={isFlashing ? '#ff0000' : component.color}
@@ -105,7 +106,6 @@ function computeBoundingBox(cubes: ComponentData['cubes']): THREE.BoxGeometry {
   const max = [-Infinity, -Infinity, -Infinity];
   for (const c of cubes) {
     for (let i = 0; i < 3; i++) {
-      // 方块中心在 localPos + 0.5，半边长 0.45（几何体 0.9×0.9×0.9）
       min[i] = Math.min(min[i], c.localPos[i] + 0.05);
       max[i] = Math.max(max[i], c.localPos[i] + 0.95);
     }

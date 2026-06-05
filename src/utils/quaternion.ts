@@ -49,6 +49,22 @@ export function identityQuat(): [number, number, number, number] {
   return [0, 0, 0, 1];
 }
 
+/**
+ * 将向量按四元数旋转，用于将本地方向转换为世界方向
+ * @param v 本地方向向量
+ * @param quat 旋转四元数
+ * @returns 旋转后的世界方向向量
+ */
+export function rotateVector(
+  v: [number, number, number],
+  quat: [number, number, number, number],
+): [number, number, number] {
+  const vec = new Vector3(v[0], v[1], v[2]);
+  const q = new Quaternion(quat[0], quat[1], quat[2], quat[3]);
+  vec.applyQuaternion(q);
+  return [Math.round(vec.x), Math.round(vec.y), Math.round(vec.z)];
+}
+
 /** 四元数转换为易读的欧拉角字符串（度数） */
 export function quatToEulerDeg(quat: [number, number, number, number]): [number, number, number] {
   const q = new Quaternion(quat[0], quat[1], quat[2], quat[3]);
