@@ -4,11 +4,12 @@ import { RotateButtons } from './RotateButtons';
 import { SnapToggle } from './SnapToggle';
 import { PropertyPanel } from './PropertyPanel';
 
-/** 底部操作面板 — 编辑模式下滑入显示 */
+/** 底部操作面板 — 编辑模式下滑入显示，支持收起 */
 export function BottomPanel() {
   const editMode = useStore(s => s.editMode);
   const selectedId = useStore(s => s.selectedId);
-  const visible = editMode === 'edit' && selectedId !== null;
+  const panelCollapsed = useStore(s => s.panelCollapsed);
+  const visible = editMode === 'edit' && selectedId !== null && !panelCollapsed;
 
   return (
     <div className={`bottom-panel ${visible ? 'bottom-panel--visible' : ''}`}>

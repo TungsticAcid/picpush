@@ -14,6 +14,8 @@ export function TopBar() {
   const toggleShapeEditor = useStore(s => s.toggleShapeEditor);
   const toggleGrid = useStore(s => s.toggleGrid);
   const toggleAxes = useStore(s => s.toggleAxes);
+  const panelCollapsed = useStore(s => s.panelCollapsed);
+  const togglePanelCollapsed = useStore(s => s.togglePanelCollapsed);
   const addPresetComponent = useStore(s => s.addPresetComponent);
   const deselectComponent = useStore(s => s.deselectComponent);
   const clearAll = useStore(s => s.clearAll);
@@ -85,7 +87,13 @@ export function TopBar() {
         >✎</button>
 
         {editMode === 'edit' && selectedId && (
-          <button className="top-btn" onClick={deselectComponent}>✓</button>
+          <>
+            <button
+              className={`top-btn top-btn--sm ${panelCollapsed ? 'top-btn--active' : ''}`}
+              onPointerDown={(e) => { e.preventDefault(); togglePanelCollapsed(); }}
+            >{panelCollapsed ? '⊞' : '⊟'}</button>
+            <button className="top-btn" onClick={deselectComponent}>✓</button>
+          </>
         )}
 
         <button className="top-btn" onClick={() => window.location.reload()}>⟲</button>

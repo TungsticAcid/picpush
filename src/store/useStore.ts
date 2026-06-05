@@ -28,6 +28,7 @@ interface Store {
   collisionFlashId: string | null;
   showGrid: boolean;
   showAxes: boolean;
+  panelCollapsed: boolean;
 
   // --- 组件操作 ---
   addComponent: (name: string, cubes: [number, number, number][]) => void;
@@ -59,6 +60,7 @@ interface Store {
   toggleComponentList: () => void;
   toggleGrid: () => void;
   toggleAxes: () => void;
+  togglePanelCollapsed: () => void;
   clearCollisionFlash: () => void;
 
   // --- 内部 ---
@@ -114,6 +116,7 @@ export const useStore = create<Store>((set, get) => ({
   collisionFlashId: null,
   showGrid: true,
   showAxes: true,
+  panelCollapsed: false,
 
   // --- 组件操作 ---
   addComponent: (name, cubes) => {
@@ -325,6 +328,7 @@ export const useStore = create<Store>((set, get) => ({
   toggleComponentList: () => set(s => ({ showComponentList: !s.showComponentList })),
   toggleGrid: () => set(s => ({ showGrid: !s.showGrid })),
   toggleAxes: () => set(s => ({ showAxes: !s.showAxes })),
+  togglePanelCollapsed: () => set(s => ({ panelCollapsed: !s.panelCollapsed })),
   clearCollisionFlash: () => set({ collisionFlashId: null }),
 
   // --- 内部 ---
